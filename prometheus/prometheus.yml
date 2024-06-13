@@ -38,3 +38,8 @@ scrape_configs:
   scheme: http
   static_configs:
     - targets: ['kafka1:7071', 'kafka2:7071', 'kafka3:7071']
+- job_name: 'kafka-connect'
+  metrics_path: /metrics
+  scheme: http
+  static_configs:
+    - targets: ['kafka-connect:7071']
