@@ -33,13 +33,28 @@ scrape_configs:
   static_configs:
   - targets:
     - localhost:9090
-- job_name: 'kafka'
-  metrics_path: /metrics
-  scheme: http
+
+
+
+- job_name: "kafka-broker"
   static_configs:
     - targets: ['kafka1:7071', 'kafka2:7071', 'kafka3:7071']
-- job_name: 'kafka-connect'
-  metrics_path: /metrics
-  scheme: http
+      labels:
+        env: "dev"
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: hostname
+      regex: '([^:]+)(:[0-9]+)?'
+      replacement: '${1}'
+
+- job_name: "kafka-connect"
   static_configs:
     - targets: ['kafka-connect:7071']
+      labels:
+        env: "dev"
+        kafka_connect_cluster_id: "cluster1"
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: hostname
+      regex: '([^:]+)(:[0-9]+)?'
+ 
