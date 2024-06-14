@@ -392,6 +392,18 @@ services:
       - kafka-network
       - cassandra-kafka
 
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.6.8
+    container_name: kafka-lag-exporter
+    ports:
+      - "8000:8000" # Default port for Kafka Lag Exporter metrics
+    volumes:
+      - ./lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ./lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+    networks:
+      - kafka-network
+      - cassandra-kafka
+
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.2
     container_name: schema-registry
