@@ -1,0 +1,70 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  scrape_protocols:
+  - OpenMetricsText1.0.0
+  - OpenMetricsText0.0.1
+  - PrometheusText0.0.4
+  evaluation_interval: 15s
+alerting:
+  alertmanagers:
+  - follow_redirects: true
+    enable_http2: true
+    scheme: http
+    timeout: 10s
+    api_version: v2
+    static_configs:
+    - targets: []
+scrape_configs:
+- job_name: prometheus
+  honor_timestamps: true
+  track_timestamps_staleness: false
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  scrape_protocols:
+  - OpenMetricsText1.0.0
+  - OpenMetricsText0.0.1
+  - PrometheusText0.0.4
+  metrics_path: /metrics
+  scheme: http
+  enable_compression: true
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - localhost:9090
+
+
+
+- job_name: "kafka-broker"
+  static_configs:
+    - targets: ['kafka1:7071', 'kafka2:7071', 'kafka3:7071']
+      labels:
+        env: "dev"
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: hostname
+      regex: '([^:]+)(:[0-9]+)?'
+      replacement: '${1}'
+
+- job_name: "kafka-connect"
+  static_configs:
+    - targets: ['kafka-connect:7071']
+      labels:
+        env: "dev"
+        kafka_connect_cluster_id: "cluster1"
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: hostname
+      regex: '([^:]+)(:[0-9]+)?'
+ 
+- job_name: 'kafka-lag-exporter'
+
+  # Override the global default and scrape targets from this job every 5 seconds.
+  scrape_interval: 15s
+
+  static_configs:
+    - targets: ['kafka-lag-exporter:8000']
+      labels:
+        instance: 'kafka-lag-exporter:8000'
+        env: "dev"
