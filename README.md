@@ -29,7 +29,7 @@ modify with your topic / kafka broker endpoints.
 * These are taken from the confluent examples here https://github.com/confluentinc/jmx-monitoring-stacks/tree/main/jmxexporter-prometheus-grafana/assets/grafana/provisioning/dashboards
 
 
-# JMS configs
+# JMX configs
 
 The jmx jar agent that is mounted to each kafka cluster exposes a metrics endpoint for prometheus. The configuration in `/config` defines the metrics. These configuration files are taken from https://github.com/confluentinc/jmx-monitoring-stacks/blob/main/shared-assets/jmx-exporter/kafka_broker.yml
 
