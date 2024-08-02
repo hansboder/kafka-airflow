@@ -35,7 +35,6 @@ scrape_configs:
     - localhost:9090
 
 
-
 - job_name: "kafka-broker"
   static_configs:
     - targets: ['kafka1:7071', 'kafka2:7071', 'kafka3:7071']
@@ -57,12 +56,16 @@ scrape_configs:
     - source_labels: [__address__]
       target_label: hostname
       regex: '([^:]+)(:[0-9]+)?'
+
+- job_name: 'statsd-exporter'
+  static_configs:
+    - targets: ['statsd-exporter:9102']
+  tls_config:
+      insecure_skip_verify: true
+
  
 - job_name: 'kafka-lag-exporter'
-
-  # Override the global default and scrape targets from this job every 5 seconds.
   scrape_interval: 15s
-
   static_configs:
     - targets: ['kafka-lag-exporter:8000']
       labels:

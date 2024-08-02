@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "github-webhook"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "github_webhook"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+python-dotenv = "^1.0.1"
+flask = "^3.0.3"
+gunicorn = "^22.0.0"
+pydantic-settings = "^2.3.4"
+requests = "^2.32.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^6.0.0"
+pytest-mock = "*"
+requests = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
