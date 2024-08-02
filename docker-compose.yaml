@@ -1,7 +1,6 @@
-version: '3.8'
 x-airflow-common:
   &airflow-common
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.1}
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.3}
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -22,6 +21,12 @@ x-airflow-common:
     AIRFLOW__SMTP__SMTP_USER: 'sample_email@my_email.com' 
     AIRFLOW__SMTP__SMTP_PASSWORD: 'your_password' 
     AIRFLOW__SMTP__SMTP_PORT: '587'
+    INTEGRATION_STATSD: true
+    AIRFLOW__METRICS__STATSD_ON: 'true'
+    AIRFLOW__METRICS__STATSD_HOST: 'statsd-exporter'
+    AIRFLOW__METRICS__STATSD_PORT: 9125
+    AIRFLOW__METRICS__STATSD_PREFIX: 'airflow'
+
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
@@ -160,28 +165,16 @@ services:
         condition: service_completed_successfully
     networks:
       - cassandra-kafka
-
+  
   airflow-init:
     <<: *airflow-common
     entrypoint: /bin/bash
     container_name: airflow-init
+    # yamllint disable rule:line-length
     command:
       - -c
       - |
-        function ver() {
-          printf "%04d%04d%04d%04d" $${1//./ }
-        }
-        airflow_version=$$(AIRFLOW__LOGGING__LOGGING_LEVEL=INFO && gosu airflow airflow version)
-        airflow_version_comparable=$$(ver $${airflow_version})
-        min_airflow_version=2.9.1
-        min_airflow_version_comparable=$$(ver $${min_airflow_version})
-        if (( airflow_version_comparable < min_airflow_version_comparable )); then
-          echo
-          echo -e "\033[1;31mERROR!!!: Too old Airflow version $${airflow_version}!\e[0m"
-          echo "The minimum Airflow version supported: $${min_airflow_version}. Only use this or higher!"
-          echo
-          exit 1
-        fi
+        echo 'starting'
         if [[ -z "${AIRFLOW_UID}" ]]; then
           echo
           echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
@@ -191,6 +184,7 @@ services:
           echo "    See: https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#setting-the-right-airflow-user"
           echo
         fi
+        echo 'getting stats'
         one_meg=1048576
         mem_available=$$(($$(getconf _PHYS_PAGES) * $$(getconf PAGE_SIZE) / one_meg))
         cpus_available=$$(grep -cE 'cpu[0-9]+' /proc/stat)
@@ -203,6 +197,7 @@ services:
           echo
           warning_resources="true"
         fi
+        echo 'checking cpus'
         if (( cpus_available < 2 )); then
           echo
           echo -e "\033[1;33mWARNING!!!: Not enough CPUS available for Docker.\e[0m"
@@ -210,6 +205,7 @@ services:
           echo
           warning_resources="true"
         fi
+        echo 'checking disk'
         if (( disk_available < one_meg * 10 )); then
           echo
           echo -e "\033[1;33mWARNING!!!: Not enough Disk space available for Docker.\e[0m"
@@ -224,9 +220,14 @@ services:
           echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
           echo
         fi
+        echo 'making folders'
         mkdir -p /sources/logs /sources/dags /sources/plugins
+        echo 'folder permissions'
         chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        echo 'attempting start'
+        echo 'starting airflow'
         exec /entrypoint airflow version
+    # yamllint enable rule:line-length
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_MIGRATE: 'true'
@@ -237,21 +238,6 @@ services:
     user: "0:0"
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
-    networks:
-      - cassandra-kafka
-
-  airflow-cli:
-    <<: *airflow-common
-    profiles:
-      - debug
-    container_name: airflow-cli
-    environment:
-      <<: *airflow-common-env
-      CONNECTION_CHECK_MAX_COUNT: "0"
-    command:
-      - bash
-      - -c
-      - airflow
     networks:
       - cassandra-kafka
 
@@ -277,7 +263,7 @@ services:
     networks:
       - cassandra-kafka
       - kafka-network
-  
+
   zoo1:
     image: confluentinc/cp-zookeeper:7.3.2
     container_name: zookeeper
@@ -437,7 +423,23 @@ services:
     networks:
       - kafka-network
       - cassandra-kafka
-  
+      
+  statsd-exporter:
+    image: prom/statsd-exporter:latest
+    container_name: "statsd-exporter"
+    volumes:
+      - ./config/statsd/statsd.yaml:/home/statsd-mapping-configs.yaml
+    entrypoint: ["/bin/sh", "-c", "--"]
+    command: ["statsd_exporter --statsd.listen-udp=:9125 --web.listen-address=:9102 --log.level debug --statsd.mapping-config=/home/statsd-mapping-configs.yaml"]
+    ports:
+      - "9125:9125"
+      - "9125:9125/udp"
+      - "9102:9102"
+    networks:
+      - kafka-network
+      - cassandra-kafka
+
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -455,13 +457,27 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=password
+      GF_AUTH_ANONYMOUS_ENABLED: true
+      GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/etc/grafana/dashboards
     depends_on:
       - prometheus
+    networks:
+      - kafka-network
+      - cassandra-kafka
+
+  alert-proxy:
+    container_name: alert-proxy
+    build:
+      context: ./alert-proxy
+    ports:
+      - "5000:5000"
+    environment:
+      GITHUB_URL: "${GITHUB_URL}"
+      GITHUB_PAT: "${GITHUB_PAT}"
     networks:
       - kafka-network
       - cassandra-kafka

@@ -1,0 +1,37 @@
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: airflow
+      folder: airflow
+      interval: 1m
+      rules:
+        - uid: ddt5xursdvvuod
+          title: AirflowDAGFailures
+          condition: A
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: prom_ds
+              model:
+                editorMode: code
+                expr: ' increase(airflow_dagrun_duration_failed_count{dag_id="random_exception_dag"}[5m]) > 0'
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+          noDataState: OK
+          execErrState: Error
+          for: 1m
+          annotations:
+            description: The number of DAG failures over the last 1m for {{ $labels.instance }} - {{ $labels.dag_id }} is above the threshold of 0.
+            runbook_url: ""
+            summary: DAG failures detected.
+          labels:
+            "": ""
+          isPaused: false
+          notification_settings:
+            receiver: github-alert

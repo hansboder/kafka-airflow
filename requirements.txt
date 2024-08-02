@@ -1,4 +1,4 @@
 confluent-kafka
 cassandra-driver
 pymongo
-apache-airflow-providers-prometheus
+apache-airflow[statsd]
