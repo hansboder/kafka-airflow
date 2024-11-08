@@ -378,17 +378,17 @@ services:
       - kafka-network
       - cassandra-kafka
 
-  kafka-lag-exporter:
-    image: lightbend/kafka-lag-exporter:0.6.8
-    container_name: kafka-lag-exporter
-    ports:
-      - "8000:8000" # Default port for Kafka Lag Exporter metrics
-    volumes:
-      - ./lag-exporter/application.conf:/opt/docker/conf/application.conf
-      - ./lag-exporter/logback.xml:/opt/docker/conf/logback.xml
-    networks:
-      - kafka-network
-      - cassandra-kafka
+  # kafka-lag-exporter:
+  #   image: lightbend/kafka-lag-exporter:0.6.8
+  #   container_name: kafka-lag-exporter
+  #   ports:
+  #     - "8000:8000" # Default port for Kafka Lag Exporter metrics
+  #   volumes:
+  #     - ./lag-exporter/application.conf:/opt/docker/conf/application.conf
+  #     - ./lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+  #   networks:
+  #     - kafka-network
+  #     - cassandra-kafka
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.2
@@ -404,25 +404,25 @@ services:
       - kafka-network
       - cassandra-kafka
 
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - 8888:8080
-    depends_on:
-      - kafka1
-      - schema-registry
-      - kafka-connect
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: PLAINTEXT://kafka1:19092,PLAINTEXT_HOST://kafka1:19092
-      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
-      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: connect
-      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
-      DYNAMIC_CONFIG_ENABLED: 'true'
-    networks:
-      - kafka-network
-      - cassandra-kafka
+  # kafka-ui:
+  #   container_name: kafka-ui
+  #   image: provectuslabs/kafka-ui:latest
+  #   ports:
+  #     - 8888:8080
+  #   depends_on:
+  #     - kafka1
+  #     - schema-registry
+  #     - kafka-connect
+  #   environment:
+  #     KAFKA_CLUSTERS_0_NAME: local
+  #     KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: PLAINTEXT://kafka1:19092,PLAINTEXT_HOST://kafka1:19092
+  #     KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+  #     KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: connect
+  #     KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
+  #     DYNAMIC_CONFIG_ENABLED: 'true'
+  #   networks:
+  #     - kafka-network
+  #     - cassandra-kafka
       
   statsd-exporter:
     image: prom/statsd-exporter:latest
@@ -465,9 +465,43 @@ services:
       - ./grafana/dashboards:/etc/grafana/dashboards
     depends_on:
       - prometheus
+      - loki
     networks:
       - kafka-network
       - cassandra-kafka
+
+  loki:
+    image: grafana/loki:3.0.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - cassandra-kafka
+      - kafka-network
+
+
+  alloy:
+    image: grafana/alloy:v1.1.0
+    container_name: alloy
+    ports:
+      - "12347:12345"
+      - "12348:12348"
+      - "6832:6832"
+      - "55679:55679"
+    volumes:
+      - ./alloy/config-logs.alloy:/etc/alloy/config.alloy
+      - ./logs:/var/log/airflow
+    command: [
+      "run",
+      "--server.http.listen-addr=0.0.0.0:12345",
+      "--stability.level=public-preview",
+      "/etc/alloy/config.alloy",
+    ]
+    depends_on:
+      - loki
+    networks:
+      - cassandra-kafka
+      - kafka-network
 
   alert-proxy:
     container_name: alert-proxy

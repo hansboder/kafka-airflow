@@ -64,10 +64,10 @@ scrape_configs:
       insecure_skip_verify: true
 
  
-- job_name: 'kafka-lag-exporter'
-  scrape_interval: 15s
-  static_configs:
-    - targets: ['kafka-lag-exporter:8000']
-      labels:
-        instance: 'kafka-lag-exporter:8000'
-        env: "dev"
+# - job_name: 'kafka-lag-exporter'
+#   scrape_interval: 15s
+#   static_configs:
+#     - targets: ['kafka-lag-exporter:8000']
+#       labels:
+#         instance: 'kafka-lag-exporter:8000'
+#         env: "dev"
