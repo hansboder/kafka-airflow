@@ -69,67 +69,8 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
-  "folderId": "airflow",
   "links": [],
   "panels": [
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "${DS_LOKI}"
-      },
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "labels"
-            },
-            "properties": []
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Line"
-            },
-            "properties": []
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 7,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": false,
-        "showCommonLabels": false,
-        "showLabels": false,
-        "showTime": false,
-        "sortOrder": "Descending",
-        "wrapLogMessage": false
-      },
-      "pluginVersion": "11.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "${DS_LOKI}"
-          },
-          "editorMode": "builder",
-          "expr": "{job=~\".+\", filename=~\".+\"} |= `` | logfmt",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Panel Title",
-      "type": "logs"
-    },
     {
       "datasource": {
         "uid": "${prometheus_datasource}"
@@ -196,7 +137,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 8
+        "y": 0
       },
       "id": 2,
       "options": {
@@ -294,7 +235,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 8
+        "y": 0
       },
       "id": 4,
       "options": {
@@ -392,7 +333,7 @@
         "h": 8,
         "w": 16,
         "x": 0,
-        "y": 16
+        "y": 8
       },
       "id": 6,
       "options": {
@@ -490,7 +431,7 @@
         "h": 9,
         "w": 16,
         "x": 0,
-        "y": 24
+        "y": 16
       },
       "id": 5,
       "options": {
@@ -522,6 +463,62 @@
       ],
       "title": "DAG success duration",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki_ds"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "labels"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Line"
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 25
+      },
+      "id": 7,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": false,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "11.1.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki_ds"
+          },
+          "expr": "{job=~\".+\", cluster=~\".*\", instance=~\".+\", dag_id=~\".+\", task_id=~\".+\", filename=~\".*/airflow/logs/dag_id.*\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Panel Title",
+      "type": "logs"
     }
   ],
   "refresh": "30s",
@@ -530,7 +527,11 @@
   "templating": {
     "list": [
       {
-        "current": {},
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "prom_ds"
+        },
         "hide": 0,
         "includeAll": false,
         "label": "Prometheus data source",
@@ -545,7 +546,11 @@
       },
       {
         "allValue": ".+",
-        "current": {},
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "uid": "${prometheus_datasource}"
         },
@@ -586,7 +591,15 @@
       },
       {
         "allValue": ".+",
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "${prometheus_datasource}"
@@ -607,7 +620,11 @@
       },
       {
         "allValue": ".+",
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": [],
+          "value": []
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
@@ -628,7 +645,11 @@
       },
       {
         "allValue": ".+",
-        "current": {},
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "${prometheus_datasource}"
@@ -669,7 +690,11 @@
         "type": "query"
       },
       {
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
         "description": "Loki",
         "hide": 0,
         "includeAll": true,
@@ -678,6 +703,7 @@
         "name": "loki_datasource",
         "options": [],
         "query": "loki",
+        "queryValue": "",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,

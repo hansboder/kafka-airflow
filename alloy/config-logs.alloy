@@ -1,67 +1,74 @@
+logging {
+      level  = "info"
+      format = "logfmt"
+    }
+
+loki.echo "example" { }
+
+loki.write "logs_integrations" {
+  endpoint {
+      url = "http://loki:3100/loki/api/v1/push"
+
+  }
+  external_labels = {"cluster" = "my-cluster"}
+}
+
 local.file_match "logs_integrations_integrations_apache_airflow" {
-	path_targets = [{
-		__address__ = "localhost",
+  path_targets = [{
+    __address__ = "localhost",
 		__path__    = "/var/log/airflow/dag_id=*/**/*.log",
 		instance    = constants.hostname,
 		job         = "integrations/apache-airflow",
 	}, {
 		__address__ = "localhost",
 		__path__    = "/var/log/airflow/scheduler/latest/*.py.log",
-		instance    = constants.hostname,
-		job         = "integrations/apache-airflow",
-	}]
+    instance    = constants.hostname,
+    job         = "integrations/apache-airflow",
+  }]
 }
 
-loki.source.file "log_scrape" {
-  targets    = local.file_match.logs_integrations_integrations_apache_airflow.targets
-  forward_to = [loki.process.filter_logs.receiver]
-  tail_from_end = true
-}
+loki.process "logs_integrations_integrations_apache_airflow" {
+  forward_to = [loki.write.logs_integrations.receiver]
 
-loki.process "filter_logs" {
-    stage.match {
-      selector = format("{job=\"integrations/apache-airflow\",instance=\"%s\"}", constants.hostname)
+  stage.match {
+    selector = format("{job=\"integrations/apache-airflow\",instance=\"%s\"}", constants.hostname)
 
-      stage.regex {
-        expression = "/var/log/airflow/dag_id=(?P<dag_id>\\S+?)/.*/task_id=(?P<task_id>\\S+?)/.*log"
-        source     = "filename"
-      }
-
-      stage.labels {
-        values = {
-          dag_id  = null,
-          task_id = null,
-        }
-      }
+    stage.regex {
+      expression = "/opt/airflow/logs/dag_id=(?P<dag_id>\\S+?)/.*/task_id=(?P<task_id>\\S+?)/.*log"
+      source     = "filename"
     }
 
-    stage.match {
-      selector = format("{job=\"integrations/apache-airflow\",instance=\"%s\"}", constants.hostname)
-
-      stage.regex {
-        expression = "/var/log/airflow/scheduler/latest/(?P<dag_file>\\S+?)\\.log"
-        source     = "filename"
-      }
-
-      stage.labels {
-        values = {
-          dag_file = null,
-        }
+    stage.labels {
+      values = {
+        dag_id  = null,
+        task_id = null,
       }
     }
-
-    stage.multiline {
-      firstline     = "\\[\\d+-\\d+-\\d+T\\d+:\\d+:\\d+\\.\\d+\\+\\d+\\]"
-      max_lines     = 0
-      max_wait_time = "5s"
-    }
-    
-  forward_to = [loki.write.grafana_loki.receiver]
   }
 
- loki.write "grafana_loki" {
-    endpoint {
-      url = "http://loki:3100/loki/api/v1/push"
+  stage.match {
+    selector = format("{job=\"integrations/apache-airflow\",instance=\"%s\"}", constants.hostname)
 
+    stage.regex {
+      expression = "/opt/airflow/logs/scheduler/latest/(?P<dag_file>\\S+?)\\.log"
+      source     = "filename"
     }
+
+    stage.labels {
+      values = {
+        dag_file = null,
+      }
+    }
+  }
+
+  stage.multiline {
+    firstline     = "\\[\\d+-\\d+-\\d+T\\d+:\\d+:\\d+\\.\\d+\\+\\d+\\]"
+    max_lines     = 0
+    max_wait_time = "5s"
+  }
+}
+
+loki.source.file "logs_integrations_integrations_apache_airflow" {
+  targets    = local.file_match.logs_integrations_integrations_apache_airflow.targets
+  forward_to = [loki.process.logs_integrations_integrations_apache_airflow.receiver]
 }
