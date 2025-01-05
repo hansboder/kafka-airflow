@@ -35,27 +35,27 @@ scrape_configs:
     - localhost:9090
 
 
-# - job_name: "kafka-broker"
-#   static_configs:
-#     - targets: ['kafka1:7071', 'kafka2:7071', 'kafka3:7071']
-#       labels:
-#         env: "dev"
-#   relabel_configs:
-#     - source_labels: [__address__]
-#       target_label: hostname
-#       regex: '([^:]+)(:[0-9]+)?'
-#       replacement: '${1}'
+- job_name: "kafka-broker"
+  static_configs:
+    - targets: ['kafka1:7071', 'kafka2:7071', 'kafka3:7071']
+      labels:
+        env: "dev"
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: hostname
+      regex: '([^:]+)(:[0-9]+)?'
+      replacement: '${1}'
 
-# - job_name: "kafka-connect"
-#   static_configs:
-#     - targets: ['kafka-connect:7071']
-#       labels:
-#         env: "dev"
-#         kafka_connect_cluster_id: "cluster1"
-#   relabel_configs:
-#     - source_labels: [__address__]
-#       target_label: hostname
-#       regex: '([^:]+)(:[0-9]+)?'
+- job_name: "kafka-connect"
+  static_configs:
+    - targets: ['kafka-connect:7071']
+      labels:
+        env: "dev"
+        kafka_connect_cluster_id: "cluster1"
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: hostname
+      regex: '([^:]+)(:[0-9]+)?'
 
 - job_name: 'statsd-exporter'
   static_configs:
@@ -64,10 +64,10 @@ scrape_configs:
       insecure_skip_verify: true
 
  
-# - job_name: 'kafka-lag-exporter'
-#   scrape_interval: 15s
-#   static_configs:
-#     - targets: ['kafka-lag-exporter:8000']
-#       labels:
-#         instance: 'kafka-lag-exporter:8000'
-#         env: "dev"
+- job_name: 'kafka-lag-exporter'
+  scrape_interval: 15s
+  static_configs:
+    - targets: ['kafka-lag-exporter:8000']
+      labels:
+        instance: 'kafka-lag-exporter:8000'
+        env: "dev"
