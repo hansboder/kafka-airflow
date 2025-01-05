@@ -157,7 +157,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${prometheus_datasource}"
           },
           "expr": "airflow_dag_processing_import_errors{job=~\"$job\", instance=~\"$instance\"}",
           "format": "time_series",
@@ -255,7 +255,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${prometheus_datasource}"
           },
           "expr": "increase(airflow_ti_failures{job=~\"$job\",  instance=~\"$instance\"}[$__interval:])",
           "format": "time_series",
@@ -451,7 +451,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${prometheus_datasource}"
           },
           "expr": "increase(airflow_dagrun_duration_success_sum{job=~\"$job\", instance=~\"$instance\", dag_id=~\"$dag_id\"}[$__interval:])/clamp_min(increase(airflow_dagrun_duration_success_count{job=~\"$job\", instance=~\"$instance\", dag_id=~\"$dag_id\"}[$__interval:]),1)",
           "format": "time_series",
@@ -573,7 +573,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "${prometheus_datasource}"
         },
         "definition": "",
         "hide": 0,
@@ -627,7 +627,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "${prometheus_datasource}"
         },
         "definition": "",
         "hide": 0,
@@ -673,7 +673,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "${prometheus_datasource}"
         },
         "definition": "",
         "hide": 0,

@@ -21,7 +21,6 @@ x-airflow-common:
     AIRFLOW__SMTP__SMTP_USER: 'sample_email@my_email.com' 
     AIRFLOW__SMTP__SMTP_PASSWORD: 'your_password' 
     AIRFLOW__SMTP__SMTP_PORT: '587'
-    INTEGRATION_STATSD: true
     AIRFLOW__METRICS__STATSD_ON: 'true'
     AIRFLOW__METRICS__STATSD_HOST: 'statsd-exporter'
     AIRFLOW__METRICS__STATSD_PORT: 9125

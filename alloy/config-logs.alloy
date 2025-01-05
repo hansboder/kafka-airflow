@@ -3,25 +3,23 @@ logging {
       format = "logfmt"
     }
 
-loki.echo "example" { }
 
 loki.write "logs_integrations" {
   endpoint {
       url = "http://loki:3100/loki/api/v1/push"
 
   }
-  external_labels = {"cluster" = "my-cluster"}
 }
 
 local.file_match "logs_integrations_integrations_apache_airflow" {
   path_targets = [{
     __address__ = "localhost",
-		__path__    = "/var/log/airflow/dag_id=*/**/*.log",
+		__path__    = "/opt/airflow/logs/dag_id=*/**/*.log",
 		instance    = constants.hostname,
 		job         = "integrations/apache-airflow",
 	}, {
 		__address__ = "localhost",
-		__path__    = "/var/log/airflow/scheduler/latest/*.py.log",
+		__path__    = "/opt/airflow/logs/scheduler/latest/*.py.log",
     instance    = constants.hostname,
     job         = "integrations/apache-airflow",
   }]
