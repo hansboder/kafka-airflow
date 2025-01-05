@@ -457,6 +457,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: "grafana"
       GF_SECURITY_ADMIN_PASSWORD: "grafana"
+      GF_INSTALL_PLUGINS: "https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip;grafana-lokiexplore-app"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/etc/grafana/dashboards
@@ -468,7 +469,7 @@ services:
       - cassandra-kafka
 
   loki:
-    image: grafana/loki:3.2.0
+    image: grafana/loki:latest
     environment:
       LOG_CLUSTER_DEPTH: '8'
       LOG_SIM_TH: '0.3'

@@ -64,6 +64,12 @@ loki.process "logs_integrations_integrations_apache_airflow" {
     max_lines     = 0
     max_wait_time = "5s"
   }
+
+  stage.timestamp {
+    source = "time"
+    format = "2025-01-05T20:18:37.861+0000"
+  }
+
 }
 
 loki.source.file "logs_integrations_integrations_apache_airflow" {
