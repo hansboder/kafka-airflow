@@ -8,3 +8,10 @@ datasources:
     isDefault: true
     editable: true
     uid: prom_ds
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: true
+    uid: loki_ds
